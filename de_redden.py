@@ -7,7 +7,7 @@ def main():
     # Central wavelength of filters, in micrometers.
     r_lambda, g_lambda, u_lambda = 0.6231, 0.4770, 0.3543
     # Zero points from zero-point-calculator.
-    zpr, zpg, zpu = get_zero_points(1.04)
+    zpr, zpr_err, zpg, zpg_err, zpu, zpu_err = get_zero_points(1.04)
     print("zpr = {}, zpg = {}, zpu = {}".format(str(zpr)[:5], str(zpg)[:5], str(zpu)[:5]))
     # Get the zero point corrected catalogue and error.
     r_mag, r_err, g_mag, g_err, u_mag, u_err = load_cat(cat_dir+"ugr.cat", zpr, zpg, zpu)
@@ -44,7 +44,7 @@ def main():
     # Remove outliers which might skew the chi-squared minimisation.
     reduced_indices = remove_outliers(gr_excess, 0.2, 0.7)
     # Iterate over reasonable range of values for the reddening vector magnitude.
-    start, stop, steps = 0.6, 1.5, 1000
+    start, stop, steps = 0.66, 1.5, 1000
     for red_vec_mag in np.linspace(start, stop, steps):
         squ_err_mag = ((stop - start) / steps)**2
         # Separate reddening vector into components in colour-colour space.
@@ -89,6 +89,8 @@ def main():
     print("Cardelli slope: {}\nMagnitide: {}\nx-comp: {}\ny-comp: {}\nChi-Squ: {}".format(cardelli_slope, best_red_vec_mag, best_red_vec_x, best_red_vec_y, chi_squ_min))
     print("A_g = {}\nA_u = {}\nA_r = {}".format(g_abs,u_abs,r_abs))
     print("A_v = {} (from A_g)\nA_v = {} (from A_u)\nA_v = {} (from A_r)".format(v_abs_g,v_abs_u,v_abs_r))
+    print("ZPg = {} +- {}\nZPr = {} +- {}\nZPu = {} +- {}".format(zpg, zpg_err, zpr, zpr_err, zpu, zpu_err))
+
 
     # Create de-reddened ugr.cat catalogue with errors.
     new_catalogue = np.column_stack((u_mag - u_abs, u_err**2 + squ_err_u,
@@ -115,15 +117,19 @@ def main():
     pleiades_curve, _ = polynomial(colour_range, 0.0, pleiades_coeffs, squ_pleiades_cov)
     dict = {"M52 Uncorrected" : (gr_excess,ug_excess,"o"),
             "M52 De-reddened" : (de_red_gr_excess,de_red_ug_excess,"o"),
-            "Pleiades Data"   : (pleiades_data[:,0], pleiades_data[:,1], "o"),
+            # "Pleiades Data"   : (pleiades_data[:,0], pleiades_data[:,1], "o"),
             "Pleiades Fit"    : (colour_range, pleiades_curve, "-"),
             "Cardelli Slope"  : (colour_range, cardelli_slope*colour_range+y_cept, "-")
             }
     plot_diagram(dict, x_label="Colour:(g-r)", y_label="Colour:(u-g)",
-                 sup_title="M52\nColour-Colour Diagram",
+                 sup_title="M52 Colour-Colour Diagram",
                  legend=True, filename="M52_Colour_Colour_Diagram"
                 )
     plt.plot(params_and_fit[:,0], params_and_fit[:,6])
+    plt.xlabel('Reddening Vector Magnitude')
+    plt.ylabel('$\chi^{2}$')
+    plt.title('$\chi^{2}$ Goodness of Fit')
+    plt.savefig('plots/chi.jpeg', dpi=1000)
 
     # Load in the larger g and r catalogue of objects which are invisible in u.
     catalog = np.loadtxt(cat_dir+"gr.cat")
@@ -154,7 +160,7 @@ def main():
             "Pleiades r vs. g-r" : (pleiades_data[:,0], pleiades_data[:,2], "o")
            }
     plot_diagram(dict, x_label="Colour:(g-r)", y_label="Magnitude: g",
-                 sup_title="M52\nColour-Magnitude Diagram",
+                 sup_title="M52 Colour-Magnitude Diagram",
                  legend=True, filename="M52_Colour_Magnitude_Diagram"
                 )
 

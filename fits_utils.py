@@ -570,12 +570,11 @@ def get_zero_points(input_airmass):
         gradient = np.sum((airmasses-np.mean(airmasses))*(zero_points-np.mean(zero_points))) / np.sum((airmasses-np.mean(airmasses))**2)
         intercept = np.mean(zero_points) - gradient * np.mean(airmasses)
         zero_point = gradient * input_airmass + intercept
+        zero_point_err = np.mean(counts_and_errs[:,2] * (2.5/(counts_and_errs[:,1] * np.log(10))))
 
-        print("zp{}: {}X + {}".format(band,gradient,intercept))
-
-        if band == "r": zpr = zero_point
-        elif band == "g": zpg = zero_point
-        elif band == "u": zpu = zero_point
+        if band == "r": zpr, zpr_err = zero_point, zero_point_err
+        elif band == "g": zpg, zpg_err = zero_point, zero_point_err
+        elif band == "u": zpu, zpu_err = zero_point, zero_point_err
 
         # plt.errorbar(airmasses,zero_points, fmt='o', markersize=1, elinewidth=1, capsize=3, barsabove=True, yerr=zero_point_errs)
         # plt.plot(airmasses, gradient*airmasses+intercept, '-')
@@ -584,8 +583,7 @@ def get_zero_points(input_airmass):
         # plt.ylabel('Extinction (magnitudes)')
         # plt.savefig('plots/zp{}.png'.format(band), dpi=1000)
         # plt.clf()
-
-    return(zpr, zpg, zpu)
+    return(zpr, zpr_err, zpg, zpg_err, zpu, zpu_err)
 
 def correct_pleiades(p_data):
     """
@@ -799,7 +797,8 @@ def plot_diagram(plts, **kwargs):
            ylabel=kwargs.get("y_label"),
            title=kwargs.get("sup_title"),
            #: Invert the y axis for the plot.
-           ylim=ax.get_ylim()[::-1]
+           ylim=ax.get_ylim()[::-1],
+           xlim=(None, 1.1)
           )
     if kwargs.get("legend")==True:
         ax.legend(plt_names)

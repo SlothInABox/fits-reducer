@@ -136,7 +136,9 @@ def main():
     # plt.plot(distances, new_get_age(max_r_flux, distances)/1000000, 'b-')
     # plt.plot(distances, legacy_get_age(max_r_flux, distances), 'r-')
     # plt.show()
-
+    print("Apparent magnitude of brightest: {} +/- {}".format(r_mag[brightest_index], r_mag_err_sq[brightest_index]**0.5))
+    bright_abs, bright_abs_err = absolute_magnitude(r_mag[brightest_index], r_mag_err_sq[brightest_index], distance_parsecs, distance_parsecs_err_sq)
+    print("Absolute magnitude of brightest: {} +/- {}".format(bright_abs, np.abs(bright_abs_err)**0.5))
     print("Distance to the cluster: {} +/- {} pc.".format(distance_parsecs, distance_parsecs_err_sq**0.5))
     print("Age of the cluster: {} +/- {} myrs.".format(cluster_age/1000000, cluster_age_err/1000000))
 
